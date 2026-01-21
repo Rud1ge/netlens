@@ -1,13 +1,22 @@
 import typer
+from rich.console import Console
 
 from protocols.arp import arp
+from protocols.ethernet import ethernet_frame
 from tools.sniffer import Sniffer
 
 app = typer.Typer(add_completion=False)
+console = Console()
 
 
 def handler(packet):
-    arp(packet)
+    table = ethernet_frame(packet)
+    if not table:
+        return
+    for parser in (arp,):
+        if parser(packet, table):
+            console.print(table)
+            return
 
 
 @app.command()
